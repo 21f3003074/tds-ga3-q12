@@ -16,74 +16,58 @@ app.add_middleware(
 @app.get("/execute")
 def execute(q: str):
 
-    q_lower = q.lower()
-
-    # -------- Ticket --------
-    ticket = re.search(r"ticket\s*(\d+)", q_lower)
-    if ticket and "status" in q_lower:
+    # 1️⃣ Ticket Status
+    m = re.match(r"What is the status of ticket (\d+)\??", q)
+    if m:
         return {
             "name": "get_ticket_status",
             "arguments": json.dumps({
-                "ticket_id": int(ticket.group(1))
+                "ticket_id": int(m.group(1))
             })
         }
 
-    # -------- Meeting --------
-    if "schedule" in q_lower:
-        meeting = re.search(
-            r"(\d{4}-\d{2}-\d{2}).*?(\d{2}:\d{2}).*?room\s*([a-z0-9]+)",
-            q_lower
-        )
-        if meeting:
-            return {
-                "name": "schedule_meeting",
-                "arguments": json.dumps({
-                    "date": meeting.group(1),
-                    "time": meeting.group(2),
-                    "meeting_room": f"Room {meeting.group(3).upper()}"
-                })
-            }
+    # 2️⃣ Meeting
+    m = re.match(r"Schedule a meeting on (\d{4}-\d{2}-\d{2}) at (\d{2}:\d{2}) in (.+)\.", q)
+    if m:
+        return {
+            "name": "schedule_meeting",
+            "arguments": json.dumps({
+                "date": m.group(1),
+                "time": m.group(2),
+                "meeting_room": m.group(3)
+            })
+        }
 
-    # -------- Expense --------
-    if "expense" in q_lower:
-        emp = re.search(r"employee\s*(\d+)", q_lower)
-        if emp:
-            return {
-                "name": "get_expense_balance",
-                "arguments": json.dumps({
-                    "employee_id": int(emp.group(1))
-                })
-            }
+    # 3️⃣ Expense
+    m = re.match(r"Show my expense balance for employee (\d+)\.", q)
+    if m:
+        return {
+            "name": "get_expense_balance",
+            "arguments": json.dumps({
+                "employee_id": int(m.group(1))
+            })
+        }
 
-    # -------- Bonus --------
-    if "bonus" in q_lower:
-        bonus = re.search(r"employee\s*(\d+).*?(\d{4})", q_lower)
-        if bonus:
-            return {
-                "name": "calculate_performance_bonus",
-                "arguments": json.dumps({
-                    "employee_id": int(bonus.group(1)),
-                    "current_year": int(bonus.group(2))
-                })
-            }
+    # 4️⃣ Bonus
+    m = re.match(r"Calculate performance bonus for employee (\d+) for (\d{4})\.", q)
+    if m:
+        return {
+            "name": "calculate_performance_bonus",
+            "arguments": json.dumps({
+                "employee_id": int(m.group(1)),
+                "current_year": int(m.group(2))
+            })
+        }
 
-    # -------- Office Issue --------
-    if "report" in q_lower and "issue" in q_lower:
-        issue = re.search(r"issue\s*(\d+)", q_lower)
-        dept = re.search(r"for\s+the\s+([a-z]+)\s+department", q_lower)
-        if issue and dept:
-            return {
-                "name": "report_office_issue",
-                "arguments": json.dumps({
-                    "issue_code": int(issue.group(1)),
-                    "department": dept.group(1).capitalize()
-                })
-            }
+    # 5️⃣ Office Issue
+    m = re.match(r"Report office issue (\d+) for the (.+) department\.", q)
+    if m:
+        return {
+            "name": "report_office_issue",
+            "arguments": json.dumps({
+                "issue_code": int(m.group(1)),
+                "department": m.group(2)
+            })
+        }
 
-    # -------- FINAL SAFE FALLBACK --------
-    return {
-        "name": "get_ticket_status",
-        "arguments": json.dumps({
-            "ticket_id": 1
-        })
-    }
+    return {"error": "Query not recognized"}
