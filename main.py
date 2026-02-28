@@ -16,9 +16,11 @@ app.add_middleware(
 @app.get("/execute")
 def execute(q: str):
 
-    # Ticket Status
-    ticket = re.search(r"ticket (\d+)", q, re.IGNORECASE)
-    if "status" in q.lower() and ticket:
+    q_lower = q.lower()
+
+    # Ticket
+    ticket = re.search(r"ticket (\d+)", q_lower)
+    if "status" in q_lower and ticket:
         return {
             "name": "get_ticket_status",
             "arguments": json.dumps({
@@ -27,8 +29,8 @@ def execute(q: str):
         }
 
     # Meeting
-    meeting = re.search(r"on (\d{4}-\d{2}-\d{2}) at (\d{2}:\d{2}) in (.+)", q, re.IGNORECASE)
-    if "schedule" in q.lower() and meeting:
+    meeting = re.search(r"on (\d{4}-\d{2}-\d{2}) at (\d{2}:\d{2}) in (.+)", q)
+    if "schedule" in q_lower and meeting:
         return {
             "name": "schedule_meeting",
             "arguments": json.dumps({
@@ -39,8 +41,8 @@ def execute(q: str):
         }
 
     # Expense
-    expense = re.search(r"employee (\d+)", q, re.IGNORECASE)
-    if "expense" in q.lower() and expense:
+    expense = re.search(r"employee (\d+)", q_lower)
+    if "expense" in q_lower and expense:
         return {
             "name": "get_expense_balance",
             "arguments": json.dumps({
@@ -49,8 +51,8 @@ def execute(q: str):
         }
 
     # Bonus
-    bonus = re.search(r"employee (\d+).*?(\d{4})", q, re.IGNORECASE)
-    if "bonus" in q.lower() and bonus:
+    bonus = re.search(r"employee (\d+).*?(\d{4})", q_lower)
+    if "bonus" in q_lower and bonus:
         return {
             "name": "calculate_performance_bonus",
             "arguments": json.dumps({
@@ -60,15 +62,18 @@ def execute(q: str):
         }
 
     # Office Issue
-    issue = re.search(r"issue (\d+)", q, re.IGNORECASE)
-    dept = re.search(r"for the (.+?) department", q, re.IGNORECASE)
-    if "report" in q.lower() and issue and dept:
+    issue = re.search(r"issue (\d+)", q_lower)
+    dept = re.search(r"for the (.+?) department", q_lower)
+    if "report" in q_lower and issue and dept:
         return {
             "name": "report_office_issue",
             "arguments": json.dumps({
                 "issue_code": int(issue.group(1)),
-                "department": dept.group(1)
+                "department": dept.group(1).title()
             })
         }
 
-    return {"error": "Query not recognized"}
+    return {
+        "name": "unknown",
+        "arguments": json.dumps({})
+    }
